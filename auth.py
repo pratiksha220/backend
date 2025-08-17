@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, requests
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import jwt, JWTError
@@ -40,10 +40,26 @@ def register(name: str, email: str, password: str, consent: bool, db: Session = 
 
 
 @router.post("/login")
-def login(data: LoginRequest, db: Session = Depends(get_db)):
-    user = get_user_by_email(db, data.email)
-    if not user or not pwd_context.verify(data.password, user.password_hash):
+async def login(request: Request, db: Session = Depends(get_db)):
+    # Detect content type
+    if request.headers.get("content-type", "").startswith("application/json"):
+        data = await request.json()
+        email = data.get("email")
+        password = data.get("password")
+    elif request.headers.get("content-type", "").startswith("application/x-www-form-urlencoded"):
+        form = await request.form()
+        email = form.get("username")  # OAuth2PasswordRequestForm uses "username"
+        password = form.get("password")
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported content type")
+
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password required")
+
+    user = get_user_by_email(db, email)
+    if not user or not pwd_context.verify(password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
     access_token = create_access_token({"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
