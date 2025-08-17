@@ -35,9 +35,9 @@ def register(email: str, password: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    hashed_password = pwd_context.hash(password)
-    user.hashed_password = hashed_password  # Make sure User model has this column
-    new_user = User(email=email, hashed_password=hashed_password)
+    password_hash = pwd_context.hash(password)
+    user.password_hash = password_hash  # Make sure User model has this column
+    new_user = User(email=email, password_hash=password_hash)
     db.add(new_user)
     db.commit()
     return {"message": "User registered successfully"}
@@ -46,7 +46,7 @@ def register(email: str, password: str, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()  # email used as username
-    if not user or not pwd_context.verify(form_data.password, user.hashed_password):
+    if not user or not pwd_context.verify(form_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     access_token = create_access_token({"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
