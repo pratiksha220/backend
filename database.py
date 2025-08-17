@@ -13,10 +13,10 @@ Base = declarative_base()
 with engine.connect() as conn:
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS queue (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             payload TEXT NOT NULL,
             attempts INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """))
     conn.commit()
