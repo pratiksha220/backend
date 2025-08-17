@@ -11,6 +11,7 @@ Base = declarative_base()
 
 # --- Add this block ---
 with engine.connect() as conn:
+    # Ensure queue table exists
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS queue (
             id SERIAL PRIMARY KEY,
@@ -19,6 +20,19 @@ with engine.connect() as conn:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """))
+
+    # Ensure password_hash column exists
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN password_hash TEXT;"))
+    except Exception:
+        pass  # Column already exists
+
+    # Ensure consent column exists
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN consent BOOLEAN DEFAULT FALSE;"))
+    except Exception:
+        pass  # Column already exists
+
     conn.commit()
 # --- End block ---
 
