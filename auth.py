@@ -7,6 +7,7 @@ from jose import jwt, JWTError
 from pydantic import BaseModel
 from database import get_db
 from crud import get_user_by_email, create_user
+from pydantic import BaseModel
 
 # --- Constants ---
 SECRET_KEY = "m9L6S2dAqV4r8Yz1F3uJ5pW7nH0xQKLB"
@@ -34,13 +35,19 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-# --- Register route ---
+
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    consent: bool
+
 @router.post("/register")
-def register(name: str, email: str, password: str, consent: bool, db: Session = Depends(get_db)):
-    if get_user_by_email(db, email):
+def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    if get_user_by_email(db, request.email):
         raise HTTPException(status_code=400, detail="Email already registered")
-    password_hash = pwd_context.hash(password)
-    create_user(db, name, email, consent, password_hash=password_hash)
+    password_hash = pwd_context.hash(request.password)
+    create_user(db, request.name, request.email, request.consent, password_hash=password_hash)
     return {"message": "User registered successfully"}
 
 
