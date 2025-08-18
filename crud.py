@@ -1,11 +1,12 @@
 from sqlalchemy.orm import Session
 import models
 
-def create_user(db: Session, name: str, email: str, consent: bool, password: str = None):
-    user = models.User(name=name, email=email, consent=consent, password=password)
+def create_user(db: Session, name: str, email: str, consent: bool, password_hash: str = None):
+    user = models.User(name=name, email=email, consent=consent, password_hash=password_hash)
     db.add(user)
     db.commit()
     db.refresh(user)
+    
     return user
 
 def get_user_by_email(db: Session, email: str):
