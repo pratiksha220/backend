@@ -1,5 +1,8 @@
 {
-  "deploy": {
-    "start": "uvicorn main:app --host 0.0.0.0 --port $PORT"
-  }
+  "services": [
+    {
+      "name": "blink-api",
+      "start": "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    }
+  ]
 }
