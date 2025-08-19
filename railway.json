@@ -13,7 +13,7 @@
         "build": {
           "cmds": [
             "npm run build --prefix frontend",
-            "cp -r frontend/dist ./dist"
+            "cp -r frontend/build ./dist"
           ]
         }
       }
