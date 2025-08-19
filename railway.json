@@ -5,16 +5,21 @@
       "phases": {
         "install": {
           "cmds": [
-            "python -m pip install -r requirements.txt",
             "npm install --prefix frontend"
-          ]
-        },
-        "build": {
-          "cmds": [
-            "npm run build --prefix frontend",
-            "cp -r frontend/build ./dist"
+          ],
+          "packages": [
+            "python310",
+            "python310Packages.fastapi",
+            "python310Packages.uvicorn",
+            "python310Packages.requests"
           ]
         }
+      },
+      "build": {
+        "cmds": [
+          "npm run build --prefix frontend",
+          "cp -r frontend/build ./dist"
+        ]
       }
     }
   },
