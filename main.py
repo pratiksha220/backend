@@ -5,14 +5,16 @@ from database import engine, Base, get_db
 from auth import router as auth_router
 from auth import get_current_user
 from passlib.context import CryptContext
-
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 # Create tables
 Base.metadata.create_all(bind=engine)
 
 # Initialize FastAPI app
 app = FastAPI()
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
-
+app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 # Password hashing setup
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -45,3 +47,11 @@ def get_user_me(current_user: models.User = Depends(get_current_user)):
     Return details of the authenticated user.
     """
     return {"name": current_user.name, "email": current_user.email, "consent": current_user.consent}
+
+# ✅ Catch-all: serve React index.html for any unmatched route
+@app.get("/{full_path:path}")
+async def serve_react(full_path: str):
+    index_path = os.path.join("dist", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Frontend not built yet")
