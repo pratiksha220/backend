@@ -4,15 +4,12 @@
     "nixpacksPlan": {
       "phases": {
         "install": {
-          "cmds": [
-            "npm install --prefix frontend"
-          ],
+          "cmds": [],
           "packages": [
             "python310",
             "python310Packages.fastapi",
             "python310Packages.uvicorn",
-            "python310Packages.requests",
-            "nodejs-20_x"
+            "python310Packages.requests"
           ]
         }
       },
