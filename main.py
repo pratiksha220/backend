@@ -22,6 +22,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
+@app.get("/")
+async def serve_root():
+    index_path = os.path.join("dist", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Frontend not built yet")
+
+
 @app.post("/register")
 def register_user(name: str, email: str, consent: bool, password: str, db: Session = Depends(get_db)):
     # Check if user already exists
