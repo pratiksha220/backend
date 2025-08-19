@@ -4,24 +4,23 @@
     "nixpacksPlan": {
       "phases": {
         "install": {
-          "cmds": [],
-          "packages": [
-            "python310",
-            "python310Packages.fastapi",
-            "python310Packages.uvicorn",
-            "python310Packages.requests"
+          "cmds": [
+            "python -m venv .venv",
+            ". .venv/bin/activate && pip install --upgrade pip",
+            ". .venv/bin/activate && pip install -r requirements.txt",
+            "npm install --prefix frontend"
+          ]
+        },
+        "build": {
+          "cmds": [
+            "npm run build --prefix frontend",
+            "cp -r frontend/build ./dist"
           ]
         }
-      },
-      "build": {
-        "cmds": [
-          "npm run build --prefix frontend",
-          "cp -r frontend/build ./dist"
-        ]
       }
     }
   },
   "deploy": {
-    "start": "python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+    "start": ". .venv/bin/activate && uvicorn main:app --host 0.0.0.0 --port $PORT"
   }
 }
