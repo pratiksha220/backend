@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
+import uvicorn
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -55,3 +56,7 @@ async def serve_react(full_path: str):
     if os.path.exists(index_path):
         return FileResponse(index_path)
     raise HTTPException(status_code=404, detail="Frontend not built yet")
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))  # Railway injects PORT
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
