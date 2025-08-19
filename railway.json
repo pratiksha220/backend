@@ -1,0 +1,25 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "nixpacksPlan": {
+      "phases": {
+        "install": {
+          "cmds": [
+            "pip install --upgrade pip",
+            "pip install -r requirements.txt",
+            "npm install --prefix frontend"
+          ]
+        },
+        "build": {
+          "cmds": [
+            "npm run build --prefix frontend",
+            "cp -r frontend/dist ./dist"
+          ]
+        }
+      }
+    }
+  },
+  "deploy": {
+    "start": "uvicorn main:app --host 0.0.0.0 --port $PORT"
+  }
+}
