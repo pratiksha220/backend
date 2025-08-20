@@ -6,22 +6,18 @@
         "install": {
           "cmds": [
             "python -m venv .venv",
-            ". .venv/bin/activate && pip install --upgrade pip",
-            ". .venv/bin/activate && pip install -r requirements.txt",
-            "npm install --prefix frontend"
+            ". .venv/bin/activate && pip install -r requirements.txt"
           ],
           "packages": [
             "python310",
             "python310Packages.fastapi",
             "python310Packages.uvicorn",
-            "python310Packages.requests",
-            "nodejs-20_x"
+            "python310Packages.requests"
           ]
         },
         "build": {
           "cmds": [
-            "npm run build --prefix frontend",
-            "cp -r frontend/build ./dist"
+            "cp -r frontend/dist ./dist"
           ]
         }
       }
