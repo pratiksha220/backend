@@ -7,6 +7,7 @@ from auth import get_current_user
 from passlib.context import CryptContext
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import uvicorn
 # Create tables
@@ -16,6 +17,16 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
+
+origins = ["*"]  # Or replace "*" with your frontend URL for better security
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Password hashing setup
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
