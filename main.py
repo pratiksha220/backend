@@ -18,7 +18,7 @@ app = FastAPI()
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 
-origins = ["*"]  # Or replace "*" with your frontend URL for better security
+origins = ["https://web-production-f83f0.up.railway.app/"]  # Or replace "*" with your frontend URL for better security
 
 app.add_middleware(
     CORSMiddleware,
