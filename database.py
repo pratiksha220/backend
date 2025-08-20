@@ -9,6 +9,17 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+# Ensure blink_data table exists with timestamp
+with engine.connect() as conn:
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS blink_data (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            blink_count INTEGER DEFAULT 0,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    conn.commit()
 # --- Ensure queue table exists ---
 with engine.connect() as conn:
     conn.execute(text("""

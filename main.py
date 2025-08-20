@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import uvicorn
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -18,7 +19,7 @@ app = FastAPI()
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 
-origins = ["https://web-production-f83f0.up.railway.app/"]  # Or replace "*" with your frontend URL for better security
+origins = ["https://web-production-f83f0.up.railway.app/"]  # Your frontend URL
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,6 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Password hashing setup
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -41,6 +43,9 @@ async def serve_root():
     raise HTTPException(status_code=404, detail="Frontend not built yet")
 
 
+# -------------------
+# User registration
+# -------------------
 @app.post("/register")
 def register_user(name: str, email: str, consent: bool, password: str, db: Session = Depends(get_db)):
     # Check if user already exists
@@ -54,27 +59,50 @@ def register_user(name: str, email: str, consent: bool, password: str, db: Sessi
     # Create user
     return crud.create_user(db, name, email, consent, password_hash=password_hash)
 
-@app.post("/blink")
-def add_blink(blink_count: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """
-    Add blink data for the authenticated user (JWT protected).
-    """
-    return crud.add_blink_data(db, current_user.id, blink_count)
 
+# -------------------
+# Add a blink
+# -------------------
+@app.post("/blink")
+def add_blink(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """
+    Add one blink for the authenticated user (increment today’s count).
+    """
+    return crud.add_blink_data(db, current_user.id, blink_count=1)
+
+
+# -------------------
+# Get blink data for dashboard
+# -------------------
+@app.get("/blink_data")
+def get_blink_data(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """
+    Returns aggregated blink counts per day for the authenticated user.
+    """
+    data = crud.get_blink_data_for_user(db, current_user.id)
+    if not data:
+        return {"message": "No data found", "data": []}
+    return {"data": data}
+
+
+# -------------------
+# Get current user info
+# -------------------
 @app.get("/user/me")
 def get_user_me(current_user: models.User = Depends(get_current_user)):
-    """
-    Return details of the authenticated user.
-    """
     return {"name": current_user.name, "email": current_user.email, "consent": current_user.consent}
 
-# ✅ Catch-all: serve React index.html for any unmatched route
+
+# -------------------
+# Serve React frontend
+# -------------------
 @app.get("/{full_path:path}")
 async def serve_react(full_path: str):
     index_path = os.path.join("dist", "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
     raise HTTPException(status_code=404, detail="Frontend not built yet")
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))  # Railway injects PORT

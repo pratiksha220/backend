@@ -5,40 +5,50 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 
-function formatDateTime(ts) {
-  const d = new Date(ts);
-  if (isNaN(d)) return String(ts);
-  return d.toLocaleString();
-}
-
 export default function Dashboard() {
-  const [data, setData] = useState([]); // expects [{ timestamp: "...", count: 12 }, ...]
+  const [data, setData] = useState([]); // expects [{ date: "...", blink_count: 12 }, ...]
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const navigate = useNavigate();
 
+  // Fetch blink data
+  const fetchBlinks = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/blink_data", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      setData(res.data?.data || []);
+    } catch (e) {
+      setErr("Session expired or API error.");
+      localStorage.removeItem("token");
+      navigate("/login", { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchBlinks = async () => {
-      try {
-        const res = await api.get("/blinks");
-        const rows = Array.isArray(res.data) ? res.data : res.data?.items || [];
-        setData(rows);
-      } catch (e) {
-        setErr("Session expired or API error.");
-        localStorage.removeItem("token");
-        navigate("/login", { replace: true });
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBlinks();
   }, [navigate]);
+
+  // Handle blink increment
+  const handleBlink = async () => {
+    try {
+      await api.post("/blink", {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      fetchBlinks(); // refresh data
+    } catch (e) {
+      console.error("Error adding blink", e);
+    }
+  };
 
   const chartData = useMemo(
     () =>
       data.map((d) => ({
-        time: formatDateTime(d.timestamp),
-        count: Number(d.count ?? d.blink_count ?? 0),
+        time: d.date,
+        count: Number(d.blink_count ?? 0),
       })),
     [data]
   );
@@ -62,6 +72,7 @@ export default function Dashboard() {
         <section className="card">
           <div className="section-head">
             <h2 className="section-title">Blink Counts Over Time</h2>
+            <button onClick={handleBlink} className="primary">Add Blink</button>
           </div>
           {loading ? (
             <div className="muted">Loading chart…</div>
@@ -93,15 +104,15 @@ export default function Dashboard() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Date & Time</th>
+                    <th>Date</th>
                     <th>Blink Count</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.map((row, idx) => (
                     <tr key={idx}>
-                      <td>{formatDateTime(row.timestamp)}</td>
-                      <td>{row.count ?? row.blink_count ?? "-"}</td>
+                      <td>{row.date}</td>
+                      <td>{row.blink_count ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
