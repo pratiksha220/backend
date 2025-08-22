@@ -70,6 +70,15 @@ def add_blink(current_user: models.User = Depends(get_current_user), db: Session
     """
     return crud.add_blink_data(db, current_user.id, blink_count=1)
 
+@app.get("/blinks")
+def get_blinks(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Return all daily blink totals for the authenticated user.
+    """
+    return crud.get_blink_data_for_user(db, current_user.id)
 
 # -------------------
 # Get blink data for dashboard
