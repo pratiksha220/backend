@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, status, Request
+from fastapi import APIRouter, HTTPException, Depends, status, Request, Header
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import jwt, JWTError
@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from database import get_db
 from crud import get_user_by_email, create_user
 from pydantic import BaseModel
-
+from models import User
 # --- Constants ---
 SECRET_KEY = "m9L6S2dAqV4r8Yz1F3uJ5pW7nH0xQKLB"
 ALGORITHM = "HS256"
@@ -78,10 +78,15 @@ async def login(request: Request, db: Session = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-# --- Current user retrieval ---
-def get_current_user(token: str = Depends(lambda: None), db: Session = Depends(get_db)):
-    if token is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing")
+def get_current_user(authorization: str = Header(...), db: Session = Depends(get_db)) -> User:
+    """
+    Extract user from JWT token in Authorization header.
+    Header should be: Authorization: Bearer <token>
+    """
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth header")
+    
+    token = authorization.split(" ")[1]
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -94,4 +99,5 @@ def get_current_user(token: str = Depends(lambda: None), db: Session = Depends(g
     user = get_user_by_email(db, email)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
     return user
