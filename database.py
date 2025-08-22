@@ -9,17 +9,17 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# Ensure blink_data table exists with timestamp
+# Ensure timestamp column exists in blink_data
 with engine.connect() as conn:
-    conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS blink_data (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
-            blink_count INTEGER DEFAULT 0,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
+    result = conn.execute(text("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name='blink_data' AND column_name='timestamp'
     """))
-    conn.commit()
+    if result.rowcount == 0:
+        conn.execute(text("ALTER TABLE blink_data ADD COLUMN timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+        conn.commit()
+
 # --- Ensure queue table exists ---
 with engine.connect() as conn:
     conn.execute(text("""
