@@ -32,7 +32,7 @@ def add_blink_data(db: Session, user_id: int, blink_count: int = 1):
     if blink:
         blink.blink_count += blink_count
     else:
-        blink = models.BlinkData(user_id=user_id, blink_count=blink_count)
+        blink = models.BlinkData(user_id=user_id, date= today, blink_count=blink_count)
         db.add(blink)
 
     db.commit()
@@ -67,7 +67,7 @@ def add_blink_data(db: Session, user_id: int, blink_count: int = 1):
         db.query(models.BlinkData)
         .filter(
             models.BlinkData.user_id == user_id,
-            func.date(models.BlinkData.timestamp) == today
+            models.BlinkData.date == today
         )
         .first()
     )

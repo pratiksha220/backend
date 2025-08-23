@@ -20,6 +20,15 @@ with engine.connect() as conn:
         conn.execute(text("ALTER TABLE blink_data ADD COLUMN timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
         conn.commit()
 
+    result = conn.execute(text("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name='blink_data' AND column_name='date'
+    """))
+    if result.rowcount == 0:
+        conn.execute(text("ALTER TABLE blink_data ADD COLUMN date DATE DEFAULT CURRENT_DATE"))
+        conn.commit()
+        
 # --- Ensure queue table exists ---
 with engine.connect() as conn:
     conn.execute(text("""
