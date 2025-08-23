@@ -116,3 +116,12 @@ async def serve_react(full_path: str):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))  # Railway injects PORT
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+@app.get("/blinks/today")
+def get_today_blinks(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Return today's total blink count for the authenticated user.
+    """
+    return {"today_blinks": crud.get_today_blinks(db, current_user.id)}

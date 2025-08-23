@@ -55,3 +55,29 @@ def get_blink_data_for_user(db: Session, user_id: int):
     )
 
     return [{"date": r.date, "blink_count": r.total_blinks} for r in results]
+
+def add_blink_data(db: Session, user_id: int, blink_count: int = 1):
+    """
+    Increment today's blink count for the user if exists,
+    otherwise create a new record.
+    """
+    # Check if a record exists today
+    today = date.today()
+    blink = (
+        db.query(models.BlinkData)
+        .filter(
+            models.BlinkData.user_id == user_id,
+            func.date(models.BlinkData.timestamp) == today
+        )
+        .first()
+    )
+
+    if blink:
+        blink.blink_count += blink_count
+    else:
+        blink = models.BlinkData(user_id=user_id, blink_count=blink_count)
+        db.add(blink)
+
+    db.commit()
+    db.refresh(blink)
+    return blink
